@@ -1,7 +1,6 @@
 package com.fh.util;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -239,11 +238,13 @@ public class TwoDimensionCode {
 	}
 
 	public static void main(String[] args) {
+//		test1();
+//
 		String imgPath = "F:/a.png";
 		/*String encoderContent = "Hello 大大、小小,welcome to QRCode!"
 				+ "\nMyblog [ http://sjsky.iteye.com ]"
 				+ "\nEMail [ sjsky007@gmail.com ]";*/
-		
+
 		String encoderContent = "http://www.baidu.com";
 		TwoDimensionCode handler = new TwoDimensionCode();
 		handler.encoderQRCode(encoderContent, imgPath, "png");
@@ -259,5 +260,110 @@ public class TwoDimensionCode {
 		System.out.println("解析结果如下：");
 		//System.out.println(decoderContent);
 		System.out.println("========decoder success!!!");
+	}
+
+	public static void test1() {
+		String imgPath = "F:/b.png";
+//先创建一个二维码
+//		String text = strRequiredParam("barcode","二维码信息");
+//		String desc = strRequiredParam("desc","文字内容");//二维码下面的文字描述
+		String text = "一个大吃货";//二维码下面的文字描述
+		String desc = "边娇的头像";//二维码下面的文字描述
+		String logoPath = "f:\\a.png";//二维码的logo地址
+		int logoWidth = 40; //logo的宽
+		int logoHeight = 40;  //logo的高
+		try{
+			Qrcode qrcode = new Qrcode();
+			qrcode.setQrcodeErrorCorrect('M');//设置纠错等级(分为:L、M、H三个等级)
+			qrcode.setQrcodeEncodeMode('B');//N代表数字、A代表a-Z、B代表其他字符
+			qrcode.setQrcodeVersion(7);//设置版本
+
+			int width = 67+12*(7-1);//设置二维码的宽  二维码像素的大小和版本号有关  但是版本号越大   二维码也越是复杂  这个需要注意
+			int height = 67+12*(7-1);//设置二维码的高
+			//将内容变为特定UTF-8格式编码的字节码
+			byte [] qrData = text.getBytes("UTF-8");
+
+			BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_BGR);
+			//创造画笔
+			Graphics2D gs = bufferedImage.createGraphics();
+			gs.setBackground(Color.WHITE);//设置背景
+			gs.setColor(Color.BLACK);//设置画笔颜色
+			gs.clearRect(0, 0, width, height);//清除画板内容
+			//设置偏移量
+			int pixoff = 2;
+			boolean [][] d = qrcode.calQrcode(qrData);
+			for(int y=0;y<d.length;y++) {
+				for(int x=0;x<d.length;x++) {
+					if(d[x][y]) {
+						gs.fillRect(x*3+pixoff, y*3+pixoff, 3, 3);
+					}
+				}
+			}
+			gs.dispose();
+			BufferedImage bm = bufferedImage;//二维码
+			File logoFile = new File(logoPath); //logo图片
+			BufferedImage logoImg = ImageIO.read(logoFile);
+	            /* float ratio = 0.5;   //倒圆角
+	             if(ratio>0){
+	                 logoWidth = logoWidth>width*ratio ? (int)(width*ratio) : logoWidth;
+	                 logoHeight = logoHeight>height*ratio ? (int)(height*ratio) : logoHeight;
+	             }  */
+			int x = (width-logoWidth)/2;
+			int y = (height-logoHeight)/2;
+			Graphics g = bm.getGraphics();
+			g.drawImage(logoImg, x, y, logoWidth, logoHeight, null);
+			int whiteWidth = 0;  //白边
+			Font font = new Font("黑体", Font.BOLD, 12);
+			int fontHeight = g.getFontMetrics(font).getHeight();//得到字体的高度
+			//计算需要多少行
+			int lineNum = 1;
+			int currentLineLen = 0;
+			for(int i=0;i<desc.length();i++){
+				char c = desc.charAt(i);
+				int charWidth = g.getFontMetrics(font).charWidth(c);
+				//循环文字得到文字区域的行数
+				if(currentLineLen+charWidth>width){
+					lineNum++;
+					currentLineLen = 0;
+					continue;
+				}
+				currentLineLen += charWidth;
+			}
+			int totalFontHeight = fontHeight*lineNum; //得到文字区域的高度
+			int wordTopMargin = 4;
+			BufferedImage bm1 = new BufferedImage(width, height+totalFontHeight+wordTopMargin-whiteWidth, BufferedImage.TYPE_INT_RGB); //创建将文字高度计算到其中的图片
+			Graphics g1 = bm1.getGraphics();
+			g1.setColor(Color.WHITE);
+			g1.fillRect(0, height, width, totalFontHeight+wordTopMargin-whiteWidth); //将文字部分的背景填充成白色
+			g1.setColor(Color.black);
+			g1.setFont(font);
+			g1.drawImage(bm, 0, 0, null); //将创建好的二维码从起点（0,0）开始画在图中
+			int currentLineIndex = 0;
+			//判断是否只有一行，只有一行就居中显示
+			currentLineLen = lineNum-1==currentLineIndex?(width-g.getFontMetrics(font).stringWidth(desc))/2:0;
+			int baseLo = g1.getFontMetrics().getAscent();
+			for(int i=0;i<desc.length();i++){
+				String c = desc.substring(i, i+1);
+				int charWidth = g.getFontMetrics(font).stringWidth(c);
+				//判断是否需要换行
+				if(currentLineLen+charWidth>width){
+					currentLineIndex++;
+					//判断是否是最后一行  最后一行居中显示
+					currentLineLen = lineNum-1==currentLineIndex?(width-g.getFontMetrics(font).stringWidth(desc.substring(i)))/2:0;
+					g1.drawString(c, currentLineLen + whiteWidth, height+baseLo+fontHeight*(currentLineIndex)+wordTopMargin);//将单个文字画到对应位置
+					currentLineLen = charWidth;
+					continue;
+				}
+				g1.drawString(c, currentLineLen+whiteWidth, height+baseLo+fontHeight*(currentLineIndex) + wordTopMargin);
+				currentLineLen += charWidth;
+			}
+			g1.dispose();
+			bm = bm1;
+//			response.setContentType("image/jpeg");
+			//好了 ，现在通过IO流来传送数据
+			ImageIO.write (bm , "JPEG", new File(imgPath));
+		}catch(Throwable e){
+			e.printStackTrace();
+		}
 	}
 }
