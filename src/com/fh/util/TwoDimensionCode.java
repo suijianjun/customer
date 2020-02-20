@@ -274,7 +274,7 @@ public class TwoDimensionCode {
 		int logoHeight = 40;  //logo的高
 		try{
 			Qrcode qrcode = new Qrcode();
-			qrcode.setQrcodeErrorCorrect('M');//设置纠错等级(分为:L、M、H三个等级)
+			qrcode.setQrcodeErrorCorrect('H');//设置纠错等级(分为:L、M、H三个等级)
 			qrcode.setQrcodeEncodeMode('B');//N代表数字、A代表a-Z、B代表其他字符
 			qrcode.setQrcodeVersion(7);//设置版本
 
