@@ -14,7 +14,7 @@
 		<!-- 4.3.7 ApplicationContext-mvc.xml误报红叉，但不影响正常运行 -->
 		<!-- <spring.version>4.3.7.RELEASE</spring.version> -->
 		<spring.version>4.2.9.RELEASE</spring.version>
-		<mysql-connector-java.version>5.1.34</mysql-connector-java.version>
+		<mysql-connector-java.version>8.0.28</mysql-connector-java.version>
 	</properties>
 
 	<dependencies>
